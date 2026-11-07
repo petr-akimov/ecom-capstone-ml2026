@@ -21,7 +21,7 @@ RUN uv pip install --system --no-cache-dir -r requirements.txt
 
 # Копирование исходного кода, моделей, данных
 COPY scripts/ ./scripts/
-#COPY data/ ./data/
+COPY data/item_features.parquet ./data/item_features.parquet
 COPY ranker.pkl ./
 
 # Копирование фронтенда и конфигурации Nginx

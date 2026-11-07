@@ -5,10 +5,9 @@ terraform.tfvars
 __pycache__
 .ipynb_checkpoints
 *.csv
-*.parquet
-data
 .venv
 venv
 .ipynb_checkpoints
 catboost_info
 uv.lock
+data_for_training.parquet
