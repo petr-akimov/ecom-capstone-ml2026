@@ -1,0 +1,27 @@
+# Заполни меня
+[project]
+name = ""
+version = "0.0.1"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.12.*"
+dependencies = [
+    "catboost>=1.2.10",
+    "fastapi>=0.162.1",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.2",
+    "pandas>=3.1.1",
+    "pyarrow>=26.0.1",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+    "uvicorn>=0.54.0",
+]
+
+[mypy]
+# что-то сюда добавить может быть?
+
+[ruff]
+# какие-то правила проверки тоже сюда может добавить?
+
+[pytest]
+# какие-то правила для тестов?
