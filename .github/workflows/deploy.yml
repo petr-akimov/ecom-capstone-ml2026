@@ -82,7 +82,7 @@ jobs:
           revision-core-fraction: 100
           revision-concurrency: 8
           revision-image-url: cr.yandex/${{ steps.tf-outputs.outputs.registry_id }}/ecom-recommendation-container:${{ github.sha }}
-          revision-execution-timeout: 10
+          revision-execution-timeout: 300
           
       - name: Print Application URL
         run: |
