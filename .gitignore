@@ -11,5 +11,4 @@ data
 venv
 .ipynb_checkpoints
 catboost_info
-*.pkl
 uv.lock
