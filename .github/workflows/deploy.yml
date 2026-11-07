@@ -1,7 +1,10 @@
-name: Deploy Yandex Serverless Container Manually
+name: Deploy E-Commerce Predictor to Yandex Serverless Containers
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -12,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -25,14 +28,14 @@ jobs:
           TF_VAR_yc_cloud_id: ${{ secrets.YC_CLOUD_ID }}
           TF_VAR_yc_folder_id: ${{ secrets.YC_FOLDER_ID }}
         run: |
-          cd tf-bootstrap
+          cd tf
           terraform init
           terraform apply -auto-approve
 
       - name: Get Terraform Outputs
         id: tf-outputs
         run: |
-          cd tf-bootstrap
+          cd tf
           REGISTRY_ID=$(terraform output -raw registry_id)
           SA_ID=$(terraform output -raw sa_id)
 
@@ -62,7 +65,7 @@ jobs:
       - name: Build, tag, and push image to Yandex Cloud Container Registry
         env:
           CR_REGISTRY_ID: ${{ steps.tf-outputs.outputs.registry_id }}
-          CR_REPOSITORY: my-nginx-container
+          CR_REPOSITORY: ecom-recommendation-container
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t cr.yandex/$CR_REGISTRY_ID/$CR_REPOSITORY:$IMAGE_TAG .
@@ -73,7 +76,7 @@ jobs:
         uses: yc-actions/yc-sls-container-deploy@v5
         with:
           yc-iam-token: ${{ steps.login-ycr.outputs.iam_token }}
-          container-name: otus-nginx-container
+          container-name: ecom-rec-service
           folder-id: ${{ secrets.YC_FOLDER_ID }}
           public: true
           revision-service-account-id: ${{ steps.tf-outputs.outputs.sa_id }} 
@@ -81,13 +84,13 @@ jobs:
           revision-memory: 1024Mb
           revision-core-fraction: 100
           revision-concurrency: 8
-          revision-image-url: cr.yandex/${{ steps.tf-outputs.outputs.registry_id }}/my-nginx-container:${{ github.sha }}
-          revision-execution-timeout: 300
+          revision-image-url: cr.yandex/${{ steps.tf-outputs.outputs.registry_id }}/ecom-recommendation-container:${{ github.sha }}
+          revision-execution-timeout: 10
           
       - name: Print Application URL
         run: |
           CONTAINER_ID="${{ steps.deploy-sls-container.outputs.id }}"
           echo "===================================================="
-          echo "🚀 Serverless Container Deployed"
+          echo "🚀 E-Commerce Serverless Container Deployed Successfully!"
           echo "🌐 URL: https://${CONTAINER_ID}.containers.yandexcloud.net"
-          echo "===================================================="          
+          echo "===================================================="
