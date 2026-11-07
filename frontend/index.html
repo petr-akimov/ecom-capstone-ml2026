@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,20 +18,20 @@
 </head>
 <body>
     <div class="card">
-        <h2>Предсказание покупки</h2>
+        <h2>Purchase Prediction</h2>
         <div class="form-group">
-            <label for="itemid">ID товара (itemid):</label>
+            <label for="itemid">Item ID (itemid):</label>
             <input type="number" id="itemid" value="98113">
         </div>
         <div class="form-group">
-            <label for="hour">Час дня (0-23):</label>
+            <label for="hour">Hour of Day (0-23):</label>
             <input type="number" id="hour" value="14" min="0" max="23">
         </div>
         <div class="form-group">
-            <label for="weekday">День недели (0=Пн, 6=Вс):</label>
+            <label for="weekday">Weekday (0=Mon, 6=Sun):</label>
             <input type="number" id="weekday" value="3" min="0" max="6">
         </div>
-        <button onclick="predictPurchase()">Рассчитать вероятность</button>
+        <button onclick="predictPurchase()">Calculate Probability</button>
 
         <div id="resultBox" class="result"></div>
     </div>
@@ -49,16 +49,16 @@
 
                 if (response.ok) {
                     resultBox.style.display = 'block';
-                    resultBox.innerHTML = `<strong>Товар:</strong> ${data.itemid}<br>` +
-                                          `<strong>Вероятность покупки:</strong> ${(data.purchase_probability * 100).toFixed(2)}%<br>` +
-                                          `<strong>Статус:</strong> ${data.recommendation}`;
+                    resultBox.innerHTML = `<strong>Item:</strong> ${data.itemid}<br>` +
+                                          `<strong>Purchase Probability:</strong> ${(data.purchase_probability * 100).toFixed(2)}%<br>` +
+                                          `<strong>Status:</strong> ${data.recommendation}`;
                 } else {
                     resultBox.style.display = 'block';
-                    resultBox.innerHTML = `Ошибка: ${data.detail || 'Товар не найден'}`;
+                    resultBox.innerHTML = `Error: ${data.detail || 'Item not found'}`;
                 }
             } catch (error) {
                 resultBox.style.display = 'block';
-                resultBox.innerHTML = `Ошибка соединения с сервером.`;
+                resultBox.innerHTML = `Server connection error.`;
             }
         }
     </script>
