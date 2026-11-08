@@ -1,4 +1,4 @@
-# E-Commerce Recommendation System (ML Zoomcamp Capstone Project)
+# E-Commerce Recommendation System (ML Zoomcamp 2026 Capstone Project)
 
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
@@ -158,6 +158,12 @@ In your GitHub repository go to **Settings -> Secrets and variables -> Actions**
 * **`GET /`** — Interactive Web UI (HTML).
 * **`GET /health`** — Service health check & model status.
 * **`GET /predict_purchase?itemid=...&hour=...&weekday=...`** — Returns the purchase probability and recommendation status for a specific item.
+
+---
+
+## User Interface & Estimated Salaries
+
+<img src="png/yc-sls001.png?raw=true" alt="YC Serverless Containers - User Interface" title="YC Serverless Containers - User Interface" width="100%"> <br>
 
 ---
 
