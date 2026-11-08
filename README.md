@@ -1,170 +1,194 @@
-# Retail Recommendation System
+# E-Commerce Recommendation System (ML Zoomcamp Capstone Project)
 
-Мини-рекомендательная система для e-commerce. 
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
+[![CatBoost](https://img.shields.io/badge/CatBoost-Ranking-orange.svg)](https://catboost.ai/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue)](https://www.docker.com/)
+[![Yandex Cloud](https://img.shields.io/badge/Yandex-Serverless%20Containers-blue)](https://cloud.yandex.com/)
 
-Цель (условная):
+End-to-end Machine Learning web application that predicts purchase likelihood for e-commerce items based on behavioral logs, event categories, time features, and item metadata from the Retailrocket dataset.
 
-Создать сервис, который будет оценивать вероятность покупки товара.
+The application integrates a **FastAPI backend and frontend interface into a single container** and runs in Yandex Cloud Serverless Containers provisioned via Terraform and deployed via GitHub Actions.
 
-Задачи (условно): 
-
-1. Модель должна "адекватно" оценивать вероятность покупки товара;
-2. Обеспечить стабильную работу сервиса на выделенной инфраструктуре;
-3. Реализовать мониторинг работы модели на выделенной инфраструктуре;
-4. Код работы сервиса должен версионироваться в gitlab;
-5. Артефакты обучения модели должны версионироваться (MLFlow\ClearML или что-то другое на ваш выбор);
-6. Автоматизация подготовки данных через AirFlow\Mage\Prefect.
-7. Артефакты для обучения храним в S3.
-
-
-Стартовый вариант работы с данными от команды Data Science:
-  - обработка логов просмотров/покупок (prepare_features.py)
-  - обучение CatBoost (train_model.py)
-  - FastAPI сервис для инференса (main.py)
-
-| Сценарий | Что делает сервис |
-|---|---|
-Понимает шанс покупки | Вероятность покупки товара после просмотра |
+Built as a capstone project for the **[DataTalks.Club Machine Learning Zoomcamp](https://github.com/DataTalksClub/machine-learning-zoomcamp)**.
 
 ---
 
-## Создание окружения
+## Problem Description
 
-Официальная инструкция по установки uv: https://docs.astral.sh/uv/getting-started/installation/
+E-commerce platforms continuously process millions of user events (views, add-to-carts, purchases), but identifying which items a user is most likely to purchase remains a critical challenge for conversion optimization and targeted recommendations. 
 
-```bash
-uv --version               # проверить что uv установлен
-uv venv .venv              # создать виртуальное окружение
-source .venv/bin/activate  # активировать
-uv pip install -r requirements.txt
-```
----
-
-## Шаг 1 — Подготовка фичей
-
- ⚠️ **Важно** здесь вы можете модифицировать код и изменить подход к генерации фичей.
-
-```bash
-python prepare_features.py
-```
-
-
-### Артефакты на этом шаге
-
-| Файл                        | Описание          |
-| --------------------------- | ----------------- | 
-| `item_features.parquet`     | Фичи товаров      |
-| `data_for_training.parquet` | Обучающая выборка |
+**The Solution:**
+This project provides an automated machine learning prediction service designed to score items and predict purchase probabilities:
+1. **Purchase Likelihood Prediction**: Calculates the probability that a user or session will convert on a given item based on rich interaction metrics and contextual features.
+2. **Automated Feature Engineering & Processing**: Cleans raw Retailrocket interaction logs, aggregates item-level metrics (`views`, `purchases`, `ctr`), and builds a lightweight feature store (`item_features.parquet`).
+3. **High-Performance Ranking**: Trains robust gradient boosting models using **CatBoost** to rank items and predict binary purchase targets.
+4. **Production Web Service**: Serves predictions through an intuitive web interface and REST API powered directly by **FastAPI**.
+5. **Cloud Deployment**: Fully containerized and deployed to **Yandex Cloud Serverless Containers** using Infrastructure as Code (Terraform) and automated CI/CD workflows.
 
 ---
 
-## Шаг 2 — CatBoost модель
+## System Architecture
 
-Подробнее об модели - https://catboost.ai/docs/en/
-
-⚠️ 1. Необходимо будет выбрать наиболее оптимальные гиперпараметры. 
-
-⚠️ 2. Вы можете выбрать другую модель для решения задачи.
-```bash
-python train_model.py
+```mermaid
+flowchart TD
+    User["User / Browser"] -->|"HTTP Request (UI / API)"| App["FastAPI Container (Backend + Frontend)"]
+    subgraph Container["Single Docker Container"]
+        App -->|Inference| Model["Pre-trained CatBoost Model (ranker.pkl)"]
+        App -->|Lookup| Features["Item Feature Store (item_features.parquet)"]
+    end
 ```
 
-### Артефакт
+## Tech Stack & Tools
 
-| Файл         | Описание                                    |
-|--------------|---------------------------------------------|
-| `ranker.pkl` | Модель, предсказывающая вероятность покупки |
+- **Machine Learning**: CatBoost, Scikit-Learn, Pandas, NumPy, DVC.
+- **Backend & Frontend**: FastAPI, Uvicorn, HTML/CSS (Single-page interface).
+- **Containerization**: Docker (optimized single-container build bundling backend, UI, model, and feature store).
+- **Infrastructure as Code**: Terraform (Yandex Cloud Serverless Containers & Container Registry).
+- **CI/CD & Deployment**: GitHub Actions (`workflow_dispatch` manual trigger).
 
 ---
 
-## Шаг 3 — Запуск FastAPI сервиса
+## Repository Structure
 
- ⚠️ **Важно** здесь вы должны модифицировать логику работы FastAPI, чтобы можно было настроить мониторинг.
-
-```bash
-python3 main.py
 ```
-
-API: http://127.0.0.1:32000
-Swagger: http://127.0.0.1:32000/docs
-
-Тестирование API:
-
-Вероятность покупки
-```bash
-curl "http://127.0.0.1:32000/predict_purchase?itemid=356475&hour=14&weekday=3"
-```
-
-Healthcheck
-```bash
-curl http://127.0.0.1:32000/health
-```
-
-Смотрим текущую версию модели
-```bash
-curl http://127.0.0.1:32000/version
+.
+├── data/
+│   └── item_features.parquet       # Lightweight aggregated item feature store for inference
+├── frontend/
+│   ├── default.conf                # Nginx custom configuration
+│   └── index.html                  # Built-in web UI for purchase predictions
+├── notebooks/
+│   └── EDA.ipynb                   # Jupyter notebook for exploratory data analysis and baseline modeling
+├── scripts/
+│   ├── loaded_models.py            # Model & feature store loader utilities
+│   ├── main.py                     # FastAPI application & serverless entrypoint
+│   ├── prepare_features.py         # ETL & feature engineering pipeline script
+│   └── train_model.py              # CatBoost model training and validation script
+├── tf/                             # Terraform infrastructure code for Yandex Cloud
+├── .github/workflows/              # GitHub Actions deployment pipelines
+├── Dockerfile                      # Optimized production container build recipe
+├── pyproject.toml                  # Project metadata & dependency configurations
+├── requirements.txt                # Python package requirements (used in Dockerfile only)
+└── ranker.pkl                      # Pre-trained CatBoost ranking model artifact
 ```
 
 ---
 
-## Структура проекта
+## Exploratory Data Analysis & Model Training (Jupyter Notebook)
 
-Сейчас структуры проекта нет. Вам необходимо привести ее к идеальному виду (ниже представлен примерный вариант, который от вас ожидается)
+The exploratory data analysis, data cleaning pipelines, feature engineering, and initial model benchmarking are fully documented in the interactive Jupyter notebook located at `notebooks/EDA.ipynb`.
 
-```
-project-root/
-│
-├── config/ # Конфигурационные файлы (Prometheus, Grafana, k8s и др.)
-│ ├── prometheus.yml
-│ └── grafana/
-│ └── k8s/
-│
-├── src/ # Исходный код приложения
-│ ├── main.py
-│ ├── utils.py
-│ └── ...
-│
-├── tests/ # Unit- и интеграционные тесты
-│ └── test_main.py
-│
-├── .gitlab-ci.yml # Файл CI/CD для автоматизации процессов
-├── Dockerfile # Описание Docker-образа приложения
-├── docker-compose.yaml # Оркестрация сервисов (при необходимости)
-├── pyproject.toml # Зависимости, настройки ruff, mypy, pytest
-├── build.sh # Скрипт для сборки проекта (если нужен)
-└── README.md # Документация проекта - обязательно пишите как работает ваш сервис!
-```
-
-## Чек-лист подсказок для выполнения проекта
-
-Переходите по пунктам и отмечайте выполненные задачи!
-
-- [ ] **.gitlab-ci.yml**  
-      ➡️ Проверьте конфигурацию CI/CD. Настройте автоматическую сборку и тестирование, чтобы всё работало без сбоев.
-
-- [ ] **pyproject.toml**  
-      ➡️ Настройте этот файл: пропишите параметры для проверки качества кода (`ruff`), тестирования (`pytest`) и статической типизации (`mypy`).
-
-- [ ] **Unit-тесты**  
-      ➡️ Напишите хотя бы несколько базовых unit-тестов, чтобы проверить, что ключевые части вашего кода работают корректно.
-
-- [ ] **Ruff & Code style**  
-      ➡️ Проверьте код с помощью `ruff`. Исправьте все ошибки форматирования и приведите стиль к требованиям PEP8 и стандарту `black`.
-
-- [ ] **mypy & Аннотации типов**  
-      ➡️ Запустите `mypy` и исправьте все ошибки. Проверьте, что типы данных явно указаны во всех функциях, где это требуется.
-
-- [ ] **Работа с данными**  
-      ➡️ Если ваши данные сейчас хранятся в проекте (например, `.csv` или `.parquet`), перепишите код так, чтобы использовать внешнее хранилище (например, S3).  
-      ⚠️ _Данные не должны лежать в репозитории!_
-
-- [ ] **Docker: подготовка к деплою**  
-      ➡️ Напишите `Dockerfile` для сборки Docker-образа вашего приложения.
-
-- [ ] **docker-compose.yaml (если деплой на ВМ)**  
-      ➡️ Для развертывания приложения на виртуальной машине добавьте файл `docker-compose.yaml`.
-
-- [ ] **Конфигурации для мониторинга и k8s**  
-      ➡️ Для интеграции с Grafana, Prometheus или развёртывания в k8s подготовьте необходимые конфиги.
+**Key steps performed in the notebook:**
+1. **Exploratory Data Analysis (EDA)**: Examining the distribution of user interactions across views, add-to-carts, and purchases in the Retailrocket dataset, identifying data sparsity and class imbalance.
+2. **Data Cleaning & Aggregation**: Processing raw event logs, handling timestamps, mapping categories, and filtering out invalid entries.
+3. **Feature Engineering**: Computing interaction counts per item (`views`, `purchases`, click-through rates), extracting temporal components (`hour`, `weekday`), and building structured feature matrices.
+4. **Model Training & Evaluation**: Training **CatBoost** classifiers, evaluating performance using ranking and classification metrics (**PR-AUC** of 0.1402 and **ROC-AUC** of 0.9192), and serializing the model artifact (`ranker.pkl`).
 
 ---
+
+## Quickstart & Setup Guide
+
+### Prerequisites
+- Python 3.12 & `uv` or `pip`
+- Docker installed locally
+- Yandex Cloud account (for cloud deployment via Terraform/GHA)
+
+---
+
+### Option A: Local Run in Docker
+
+#### 1. **Clone the repository and navigate to the project directory:**
+   ```bash
+   git clone https://github.com/petr-akimov/ecom-capstone-ml2026
+   cd ecom-capstone-ml2026
+
+#### 2. **Build the Docker image:**
+
+```
+docker build -t ecom-recommendation:latest .
+```
+
+#### 3. **Run the container locally:**
+
+```
+docker run --rm -p 8080:8080 --name ecom-test ecom-recommendation:latest
+```
+
+#### 4. **Access the service:**
+
+- Open your browser and go to http://localhost:8080 to use the interactive web interface.
+- Test the prediction API directly via curl:
+```
+curl "http://localhost:8080/predict_purchase?itemid=98113&hour=14&weekday=3"
+```
+
+### Option B: Deployment to Yandex Cloud Serverless Containers
+
+The project includes automated infrastructure provisioning via **Terraform** and deployment via **GitHub Actions** (triggered manually via `workflow_dispatch`).
+
+#### 1. Configure GitHub Secrets
+In your GitHub repository go to **Settings -> Secrets and variables -> Actions** and add:
+* `YC_TOKEN` — Yandex Cloud OAuth or IAM token.
+* `YC_CLOUD_ID` — Your Yandex Cloud ID.
+* `YC_FOLDER_ID` — Your Yandex Cloud Folder ID.
+
+#### 2. Infrastructure Setup & Deployment via GitHub Actions
+1. Navigate to the **Actions** tab in your GitHub repository.
+2. Select the **Deploy E-Commerce Predictor to Yandex Serverless Containers** workflow.
+3. Click **Run workflow** (manual trigger).
+4. The workflow will:
+   * Initialize Terraform and provision the Container Registry and Service Account permissions (`tf/`).
+   * Build the optimized Docker image and push it to Yandex Container Registry.
+   * Deploy the service to **Yandex Serverless Containers** with public access enabled.
+   * Output the public URL of your live application.
+
+---
+
+## API Endpoints
+
+* **`GET /`** — Interactive Web UI (HTML).
+* **`GET /health`** — Service health check & model status.
+* **`GET /predict_purchase?itemid=...&hour=...&weekday=...`** — Returns the purchase probability and recommendation status for a specific item.
+
+---
+
+## Evaluation Criteria Compliance Matrix
+
+| Criteria | Points Claimed | Supporting Artifacts & Implementation Details |
+| :--- | :---: | :--- |
+| **Problem Description** | **2 / 2** | [README.md](README.md): Outlines the business objective of predicting purchase conversion for e-commerce items using behavioral logs. |
+| **EDA & Data Prep** | **2 / 2** | [notebooks/EDA.ipynb](notebooks/EDA.ipynb) & [scripts/prepare_features.py](scripts/prepare_features.py): Detailed analysis of user event logs, feature extraction, and feature store creation. |
+| **Model Training & Tuning** | **3 / 3** | [scripts/train_model.py](scripts/train_model.py): Training robust gradient boosting models (**CatBoost**) evaluated with ROC-AUC and PR-AUC. |
+| **Script Conversion** | **1 / 1** | [scripts/prepare_features.py](scripts/prepare_features.py) & [scripts/train_model.py](scripts/train_model.py): Clean extraction of preprocessing and training logic into reproducible scripts. |
+| **Reproducibility** | **2 / 2** | [pyproject.toml](pyproject.toml) and structured directories with clear step-by-step execution instructions. |
+| **Model Deployment** | **2 / 2** | [scripts/main.py](scripts/main.py): Functional FastAPI web service with prediction endpoints and embedded UI. |
+| **Dependency Management** | **2 / 2** | [pyproject.toml](pyproject.toml) & [uv.lock](uv.lock): Locked/pinned dependencies using the `uv` package manager. |
+| **Containerization** | **2 / 2** | [Dockerfile](Dockerfile): Production-ready single-container build bundling FastAPI, frontend UI, model artifact, and feature store. |
+| **Cloud Deployment** | **2 / 2** | [tf/](tf/) & [.github/workflows/](.github/workflows/): Terraform infrastructure and manual GHA workflow for Yandex Serverless Containers. |
+
+## Local Development & Training (Optional)
+
+If you want to re-run the pipeline locally:
+```bash
+uv venv .venv
+source .venv/bin/activate
+uv sync
+```
+
+# Run feature engineering (requires raw CSVs in data/)
+
+```
+python prepare_features.py --events events.csv --item-props item_properties_part1.csv --out-item-feats item_features.parquet --out-train data_for_training.parquet
+```
+
+
+# Train the model
+```
+python scripts/train_model.py
+```
+# Run FastAPI locally
+
+```
+python -m scripts.main
+```

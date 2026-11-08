@@ -1,8 +1,7 @@
-# Заполни меня
 [project]
-name = ""
+name = "ecom-capstone-ml2026"
 version = "0.0.1"
-description = "Add your description here"
+description = "E-Commerce Recommendation System (ML Zoomcamp Capstone Project)"
 readme = "README.md"
 requires-python = "==3.12.*"
 dependencies = [
@@ -18,10 +17,7 @@ dependencies = [
 ]
 
 [mypy]
-# что-то сюда добавить может быть?
 
 [ruff]
-# какие-то правила проверки тоже сюда может добавить?
 
 [pytest]
-# какие-то правила для тестов?
