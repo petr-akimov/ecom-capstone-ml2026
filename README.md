@@ -99,9 +99,17 @@ The exploratory data analysis, data cleaning pipelines, feature engineering, and
 ### Option A: Local Run in Docker
 
 #### 1. **Clone the repository and navigate to the project directory:**
-   ```bash
-   git clone https://github.com/petr-akimov/ecom-capstone-ml2026
-   cd ecom-capstone-ml2026
+```bash
+git clone https://github.com/petr-akimov/ecom-capstone-ml2026
+cd ecom-capstone-ml2026
+```
+
+#### 2. Extract raw data files (*.xz) in the data/ directory:**
+Make sure you extract any compressed dataset archives (such as events.csv.xz, item_properties_part1.csv.xz, etc.) inside the data/ folder before proceeding:
+```
+unxz data/*.xz
+```
+
 
 #### 2. **Build the Docker image:**
 
@@ -127,13 +135,13 @@ curl "http://localhost:8080/predict_purchase?itemid=98113&hour=14&weekday=3"
 
 The project includes automated infrastructure provisioning via **Terraform** and deployment via **GitHub Actions** (triggered manually via `workflow_dispatch`).
 
-#### 1. Configure GitHub Secrets
+#### 1. **Configure GitHub Secrets**
 In your GitHub repository go to **Settings -> Secrets and variables -> Actions** and add:
 * `YC_TOKEN` — Yandex Cloud OAuth or IAM token.
 * `YC_CLOUD_ID` — Your Yandex Cloud ID.
 * `YC_FOLDER_ID` — Your Yandex Cloud Folder ID.
 
-#### 2. Infrastructure Setup & Deployment via GitHub Actions
+#### 2. **Infrastructure Setup & Deployment via GitHub Actions**
 1. Navigate to the **Actions** tab in your GitHub repository.
 2. Select the **Deploy E-Commerce Predictor to Yandex Serverless Containers** workflow.
 3. Click **Run workflow** (manual trigger).
@@ -169,25 +177,32 @@ In your GitHub repository go to **Settings -> Secrets and variables -> Actions**
 
 ## Local Development & Training (Optional)
 
-If you want to re-run the pipeline locally:
+- If you want to re-run the pipeline locally:
 ```bash
 uv venv .venv
 source .venv/bin/activate
 uv sync
 ```
 
-# Run feature engineering (requires raw CSVs in data/)
+- Extract raw data files (*.xz) in the data/ directory:**
+Make sure you extract any compressed dataset archives (such as events.csv.xz, item_properties_part1.csv.xz, etc.) inside the data/ folder before proceeding:
+```
+unxz data/*.xz
+```
+
+
+- Run feature engineering (requires raw CSVs in data/)
 
 ```
 python prepare_features.py --events events.csv --item-props item_properties_part1.csv --out-item-feats item_features.parquet --out-train data_for_training.parquet
 ```
 
-
-# Train the model
+- Train the model
 ```
 python scripts/train_model.py
 ```
-# Run FastAPI locally
+
+- Run FastAPI locally
 
 ```
 python -m scripts.main
