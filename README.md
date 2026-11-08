@@ -161,7 +161,7 @@ In your GitHub repository go to **Settings -> Secrets and variables -> Actions**
 
 ---
 
-## User Interface & Estimated Salaries
+## User Interface & E-Commerce Recommendation System in Action
 
 <img src="png/yc-sls001.png?raw=true" alt="YC Serverless Containers - User Interface" title="YC Serverless Containers - User Interface" width="100%"> <br>
 
