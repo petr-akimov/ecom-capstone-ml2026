@@ -12,10 +12,15 @@ resource "yandex_resourcemanager_folder_iam_member" "registry_push" {
   member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
 }
 
-# 👈 Добавляем права на вытягивание (pull) образов для этого же сервисного аккаунта
 resource "yandex_resourcemanager_folder_iam_member" "registry_pull" {
   folder_id = var.yc_folder_id
   role      = "container-registry.images.puller"
+  member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
+}
+
+resource "yandex_resourcemanager_folder_iam_member" "serverless_editor" {
+  folder_id = var.yc_folder_id
+  role      = "serverless-containers.editor"
   member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
 }
 
