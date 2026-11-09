@@ -26,7 +26,14 @@ jobs:
           TF_VAR_yc_folder_id: ${{ secrets.YC_FOLDER_ID }}
         run: |
           cd tf
-          terraform init
+          n=0
+          until [ "$n" -ge 3 ]
+          do
+            terraform init && break
+            n=$((n+1))
+            echo "Terraform init failed, retrying in 10 seconds... (Attempt $n/3)"
+            sleep 10
+          done
           terraform apply -auto-approve
 
       - name: Get Terraform Outputs
