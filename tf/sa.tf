@@ -24,6 +24,12 @@ resource "yandex_resourcemanager_folder_iam_member" "serverless_editor" {
   member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "container_user" {
+  folder_id = var.yc_folder_id
+  role      = "serverless-containers.user"
+  member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
+}
+
 resource "yandex_iam_service_account_key" "registry_key" {
   service_account_id = yandex_iam_service_account.registry_sa.id
   description        = "key for docker push"
