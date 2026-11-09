@@ -1,0 +1,88 @@
+name: Deploy E-com Predictor to YC SLS Containers
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.1
+
+      - name: Terraform Init and Apply
+        env:
+          TF_VAR_yc_token: ${{ secrets.YC_TOKEN }}
+          TF_VAR_yc_cloud_id: ${{ secrets.YC_CLOUD_ID }}
+          TF_VAR_yc_folder_id: ${{ secrets.YC_FOLDER_ID }}
+        run: |
+          cd tf
+          terraform init
+          terraform apply -auto-approve
+
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          cd tf
+          REGISTRY_ID=$(terraform output -raw registry_id)
+          SA_ID=$(terraform output -raw sa_id)
+          SA_KEY_JSON=$(terraform output -raw sa_key_json)
+
+          echo "registry_id=$REGISTRY_ID" >> $GITHUB_OUTPUT
+          echo "sa_id=$SA_ID" >> $GITHUB_OUTPUT
+          echo "sa_key_json=$SA_KEY_JSON" >> $GITHUB_OUTPUT
+
+      - name: Install YC CLI and Login via lxhan/yc-install
+        uses: lxhan/yc-install@v3
+        with:
+          SA_KEY: ${{ steps.tf-outputs.outputs.sa_key_json }}
+
+      - name: Generate IAM Token for Docker Login
+        id: login-ycr
+        run: |
+          # Экшен настраивает дефолтный профиль yc, поэтому мы можем сразу запросить токен
+          IAM_TOKEN=$(yc iam create-token)
+          echo "iam_token=$IAM_TOKEN" >> $GITHUB_OUTPUT
+          echo "$IAM_TOKEN" | docker login cr.yandex -u iam --password-stdin
+
+      - name: Build, tag, and push image to Yandex Cloud Container Registry
+        env:
+          CR_REGISTRY_ID: ${{ steps.tf-outputs.outputs.registry_id }}
+          CR_REPOSITORY: ecom-recommendation-container
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t cr.yandex/$CR_REGISTRY_ID/$CR_REPOSITORY:$IMAGE_TAG .
+          docker push cr.yandex/$CR_REGISTRY_ID/$CR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy Serverless Container
+        id: deploy-sls-container
+        uses: yc-actions/yc-sls-container-deploy@v5
+        with:
+          yc-iam-token: ${{ steps.login-ycr.outputs.iam_token }}
+          container-name: ecom-rec-service
+          folder-id: ${{ secrets.YC_FOLDER_ID }}
+          public: true
+          revision-service-account-id: ${{ steps.tf-outputs.outputs.sa_id }}  
+          revision-cores: 1
+          revision-memory: 1024Mb
+          revision-core-fraction: 100
+          revision-concurrency: 8
+          revision-image-url: cr.yandex/${{ steps.tf-outputs.outputs.registry_id }}/ecom-recommendation-container:${{ github.sha }}
+          revision-execution-timeout: 300
+          
+      - name: Print Application URL
+        run: |
+          CONTAINER_ID="${{ steps.deploy-sls-container.outputs.id }}"
+          echo "==================================================++"
+          echo "🚀 E-Commerce Serverless Container Deployed Successfully!"
+          echo "🌐 URL: https://${CONTAINER_ID}.containers.yandexcloud.net"
+          echo "===================================================="
