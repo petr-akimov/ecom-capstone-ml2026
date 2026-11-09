@@ -18,13 +18,13 @@ resource "yandex_resourcemanager_folder_iam_member" "registry_pull" {
   member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "serverless_editor" {
+# Меняем editor на admin (или добавляем admin), чтобы экшен мог менять права доступа (public: true)
+resource "yandex_resourcemanager_folder_iam_member" "serverless_admin" {
   folder_id = var.yc_folder_id
-  role      = "serverless-containers.editor"
+  role      = "serverless-containers.admin"
   member    = "serviceAccount:${yandex_iam_service_account.registry_sa.id}"
 }
 
-# 👈 Разрешаем сервисному аккаунту использовать самого себя для Serverless Containers
 resource "yandex_iam_service_account_iam_member" "sa_account_user" {
   service_account_id = yandex_iam_service_account.registry_sa.id
   role               = "iam.serviceAccounts.user"
